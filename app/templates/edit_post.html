@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Edit Post{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px; margin:40px auto;">
+    <h2 style="margin-bottom:16px;">Edit Post</h2>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/posts/{{ post.id }}/edit">
+        <textarea name="content" required id="edit-input">{{ post.content }}</textarea>
+        <div class="char-warning" id="edit-warning">Content exceeds 280 characters and will be truncated. Please shorten your text.</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span class="char-counter" id="counter">{{ 280 - post.content|length }}</span>
+            <div style="display:flex; gap:8px;">
+                <a href="/" class="btn" style="background:#888;">Cancel</a>
+                <button type="submit" class="btn">Save</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+const input = document.getElementById('edit-input');
+const counter = document.getElementById('counter');
+const warning = document.getElementById('edit-warning');
+const btn = input.closest('form').querySelector('button[type="submit"]');
+function updateCounter() {
+    const remaining = 280 - input.value.length;
+    counter.textContent = remaining;
+    const over = remaining < 0;
+    counter.classList.toggle('over-limit', over);
+    warning.style.display = over ? 'block' : 'none';
+    btn.disabled = over;
+}
+input.addEventListener('input', updateCounter);
+</script>
+{% endblock %}

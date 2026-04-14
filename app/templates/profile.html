@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "post_card.html" import post_card %}
+{% block title %}{{ profile_user.display_name or profile_user.username }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="profile-header">
+        <h2>{{ profile_user.display_name or profile_user.username }}</h2>
+        <div class="username">@{{ profile_user.username }}</div>
+        {% if profile_user.bio %}
+        <div class="bio">{{ profile_user.bio }}</div>
+        {% endif %}
+        <div class="profile-stats">
+            <span><strong>{{ post_count }}</strong> post{{ 's' if post_count != 1 }}</span>
+            <span><strong>{{ repost_count }}</strong> repost{{ 's' if repost_count != 1 }}</span>
+            <a href="/profile/{{ profile_user.username }}/followers" class="link"><strong>{{ follower_count }}</strong> follower{{ 's' if follower_count != 1 }}</a>
+            <a href="/profile/{{ profile_user.username }}/following" class="link"><strong>{{ following_count }}</strong> following</a>
+        </div>
+        <div class="post-meta" style="margin-top:6px;">Joined {{ profile_user.created_at.strftime('%b %d, %Y') }}</div>
+        {% if is_own %}
+        <a href="/settings" class="btn btn-sm" style="margin-top:10px;">Edit Profile</a>
+        {% else %}
+        <form method="post" action="/profile/{{ profile_user.username }}/follow" style="margin-top:10px;">
+            {% if is_following %}
+            <button type="submit" class="btn btn-sm btn-outline">Unfollow</button>
+            {% else %}
+            <button type="submit" class="btn btn-sm">Follow</button>
+            {% endif %}
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% for post in posts %}
+{{ post_card(post, user) }}
+{% else %}
+<div class="empty">No posts yet.</div>
+{% endfor %}
+{% endblock %}

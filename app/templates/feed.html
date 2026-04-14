@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "post_card.html" import post_card %}
+{% block title %}Feed{% endblock %}
+{% block content %}
+<div class="card">
+    <form method="post" action="/posts">
+        <textarea name="content" placeholder="What's on your mind?" required id="post-input"></textarea>
+        <div class="char-warning" id="post-warning">Content exceeds 280 characters and will be truncated. Please shorten your text.</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span class="char-counter" id="counter">280</span>
+            <button type="submit" class="btn" id="post-btn">Post</button>
+        </div>
+    </form>
+</div>
+
+<div class="tabs">
+    <a href="/?tab=all" class="{{ 'active' if tab == 'all' else '' }}">All</a>
+    <a href="/?tab=following" class="{{ 'active' if tab == 'following' else '' }}">Following</a>
+</div>
+
+{% for post in posts %}
+{{ post_card(post, user) }}
+{% else %}
+<div class="empty">
+    {% if tab == 'following' %}
+    No posts from people you follow yet. Try the "All" tab or follow some users!
+    {% else %}
+    No posts yet. Be the first to post!
+    {% endif %}
+</div>
+{% endfor %}
+
+<script>
+const input = document.getElementById('post-input');
+const counter = document.getElementById('counter');
+const warning = document.getElementById('post-warning');
+const btn = document.getElementById('post-btn');
+function updateCounter() {
+    const remaining = 280 - input.value.length;
+    counter.textContent = remaining;
+    const over = remaining < 0;
+    counter.classList.toggle('over-limit', over);
+    warning.style.display = over ? 'block' : 'none';
+    btn.disabled = over;
+}
+input.addEventListener('input', updateCounter);
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "post_card.html" import post_card %}
+{% block title %}Post{% endblock %}
+{% block content %}
+{{ post_card(post, user) }}
+
+<div class="card reply-form">
+    <form method="post" action="/posts/{{ post.id }}/reply">
+        <textarea name="content" placeholder="Write a reply..." required id="reply-input" rows="2"></textarea>
+        <div class="char-warning" id="reply-warning">Content exceeds 280 characters and will be truncated. Please shorten your text.</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span class="char-counter" id="reply-counter">280</span>
+            <button type="submit" class="btn btn-sm" id="reply-btn">Reply</button>
+        </div>
+    </form>
+</div>
+
+<h3 style="margin: 16px 0 8px; font-size: 1em; color: #666;">Replies ({{ replies|length }})</h3>
+
+{% for reply in replies %}
+{{ post_card(reply, user) }}
+{% else %}
+<div class="empty">No replies yet. Be the first to reply!</div>
+{% endfor %}
+
+<script>
+const input = document.getElementById('reply-input');
+const counter = document.getElementById('reply-counter');
+const warning = document.getElementById('reply-warning');
+const btn = document.getElementById('reply-btn');
+function updateCounter() {
+    const remaining = 280 - input.value.length;
+    counter.textContent = remaining;
+    const over = remaining < 0;
+    counter.classList.toggle('over-limit', over);
+    warning.style.display = over ? 'block' : 'none';
+    btn.disabled = over;
+}
+input.addEventListener('input', updateCounter);
+</script>
+{% endblock %}

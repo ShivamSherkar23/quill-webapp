@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - @{{ profile_user.username }}{% endblock %}
+{% block content %}
+<div class="card">
+    <h2 style="margin-bottom:4px;">{{ title }}</h2>
+    <a href="/profile/{{ profile_user.username }}" class="link post-meta">@{{ profile_user.username }}</a>
+</div>
+
+{% for u in users %}
+<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+        <a href="/profile/{{ u.username }}" style="font-weight:bold; text-decoration:none; color:var(--fg);">{{ u.display_name or u.username }}</a>
+        <div class="post-meta">@{{ u.username }}</div>
+    </div>
+</div>
+{% else %}
+<div class="empty">No {{ title|lower }} yet.</div>
+{% endfor %}
+{% endblock %}

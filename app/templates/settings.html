@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px; margin:40px auto;">
+    <h2 style="margin-bottom:16px;">Edit Profile</h2>
+    <form method="post" action="/settings">
+        <div class="form-group">
+            <label for="display_name">Display Name</label>
+            <input type="text" id="display_name" name="display_name" value="{{ user.display_name or '' }}" maxlength="100">
+        </div>
+        <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea id="bio" name="bio" maxlength="500" rows="3">{{ user.bio or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Save Changes</button>
+    </form>
+</div>
+
+<div class="card" style="max-width:500px; margin:20px auto;">
+    <h2 style="margin-bottom:6px;">Appearance</h2>
+    <p style="margin-bottom:16px; font-size:0.9em; color:var(--meta);">Color mode</p>
+    <div style="display:flex; gap:16px; justify-content:center;">
+        <div class="theme-card" data-theme="light" onclick="setTheme('light')">
+            <div class="theme-preview theme-preview-light">
+                <div class="tp-nav"><span class="tp-line-sm"></span><span class="tp-btn-sm"></span></div>
+                <div class="tp-body"><span class="tp-line"></span><span class="tp-line short"></span></div>
+                <div class="tp-input"><span class="tp-dot"></span></div>
+            </div>
+            <span>Light</span>
+        </div>
+        <div class="theme-card" data-theme="system" onclick="setTheme('system')">
+            <div class="theme-preview theme-preview-auto">
+                <div class="tp-half-light">
+                    <div class="tp-nav"><span class="tp-line-sm"></span><span class="tp-btn-sm"></span></div>
+                    <div class="tp-body"><span class="tp-line"></span><span class="tp-line short"></span></div>
+                    <div class="tp-input"><span class="tp-dot"></span></div>
+                </div>
+                <div class="tp-half-dark">
+                    <div class="tp-nav"><span class="tp-line-sm"></span><span class="tp-btn-sm"></span></div>
+                    <div class="tp-body"><span class="tp-line"></span><span class="tp-line short"></span></div>
+                    <div class="tp-input"><span class="tp-dot"></span></div>
+                </div>
+            </div>
+            <span>Auto</span>
+        </div>
+        <div class="theme-card" data-theme="dark" onclick="setTheme('dark')">
+            <div class="theme-preview theme-preview-dark">
+                <div class="tp-nav"><span class="tp-line-sm"></span><span class="tp-btn-sm"></span></div>
+                <div class="tp-body"><span class="tp-line"></span><span class="tp-line short"></span></div>
+                <div class="tp-input"><span class="tp-dot"></span></div>
+            </div>
+            <span>Dark</span>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="max-width:500px; margin:20px auto;">
+    <h2 style="margin-bottom:16px;">Manage Account</h2>
+    <p style="margin-bottom:12px; font-size:0.9em; color:var(--meta);">Permanently delete your account and all your posts. This cannot be undone.</p>
+    <form method="post" action="/settings/delete-account" onsubmit="confirmSubmit(this, 'Are you sure? This will permanently delete your account and all your posts.'); return false;">
+        <button type="submit" class="btn btn-danger" style="width:100%;">Delete Account</button>
+    </form>
+</div>
+
+<script>
+(function() {
+    function highlight() {
+        const current = document.documentElement.getAttribute('data-theme') || 'system';
+        document.querySelectorAll('.theme-card').forEach(card => {
+            if (card.dataset.theme === current) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+    }
+    highlight();
+    window.setTheme = function(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+        highlight();
+    };
+})();
+</script>
+{% endblock %}

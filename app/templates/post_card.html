@@ -1,0 +1,32 @@
+{% macro post_card(post, user, show_author=true) %}
+<div class="card post-card" onclick="window.location='/posts/{{ post.id }}'" style="cursor:pointer;">
+    {% if post.reposted_by_name is defined and post.reposted_by_name %}
+    <div class="repost-badge"><img src="/static/icons/repost.png" alt="Repost" class="icon" style="vertical-align: -2px;"> {{ "You reposted" if post.reposted_by_name == (user.display_name or user.username) else post.reposted_by_name ~ " reposted" }}</div>
+    {% endif %}
+    <div class="post-header">
+        <div>
+            {% if show_author or (post.reposted_by_name is defined and post.reposted_by_name) %}
+            <a href="/profile/{{ post.author.username }}" onclick="event.stopPropagation();">{{ post.author.display_name or post.author.username }}</a>
+            <span class="post-meta">@{{ post.author.username }}</span>
+            {% endif %}
+        </div>
+        <a href="/posts/{{ post.id }}" class="post-meta">{{ (post.timeline_created_at if post.timeline_created_at is defined else post.created_at)|time_ago }}</a>
+    </div>
+    <div class="post-content">{{ post.content }}</div>
+    <div class="post-actions" onclick="event.stopPropagation();">
+        <form method="post" action="/posts/{{ post.id }}/like">
+            <button type="submit" class="{{ 'liked' if post.liked_by_me else '' }}">{% if post.liked_by_me %}<svg class="icon icon-liked-svg" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>{% else %}<img src="/static/icons/like.png" alt="Like" class="icon">{% endif %} {{ post.like_count }}</button>
+        </form>
+        <form method="post" action="/posts/{{ post.id }}/repost">
+            <button type="submit" class="{{ 'reposted' if post.reposted_by_me else '' }}"><img src="/static/icons/repost.png" alt="Repost" class="icon{{ ' icon-reposted' if post.reposted_by_me else '' }}"> {{ post.repost_count }}</button>
+        </form>
+        <a href="/posts/{{ post.id }}"><img src="/static/icons/reply.png" alt="Reply" class="icon"> {{ post.reply_count }}</a>
+        {% if post.user_id == user.id %}
+        <a href="/posts/{{ post.id }}/edit">Edit</a>
+        <form method="post" action="/posts/{{ post.id }}/delete" onsubmit="confirmSubmit(this, 'Delete this post?'); return false;">
+            <button type="submit">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

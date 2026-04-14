@@ -1,0 +1,18 @@
+[project]
+name = "quill"
+version = "0.1.0"
+description = "A simple web app built with FastAPI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "fastapi>=0.135.3",
+    "greenlet>=3.4.0",
+    "itsdangerous>=2.2.0",
+    "jinja2>=3.1.6",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.26",
+    "sqlalchemy>=2.0.49",
+    "uvicorn[standard]>=0.44.0",
+]
