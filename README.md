@@ -30,6 +30,9 @@ A simple Twitter-like web app built with FastAPI. Supports user signup/login, po
 # Install dependencies
 uv sync
 
+# Install dev dependencies for tests
+uv sync --group dev
+
 # Create the PostgreSQL database
 createdb quill
 
@@ -41,6 +44,32 @@ DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/dbname" uv run uvicorn ma
 ```
 
 Open http://localhost:8000 in your browser.
+
+## Tests
+
+```bash
+uv run --group dev pytest
+```
+
+## Taskfile
+
+```bash
+task install
+task run
+task lint
+task test
+task coverage
+task check
+```
+
+## Lint
+
+```bash
+uv run --group dev ruff check --fix .
+uv run --group dev ruff format .
+uv run --group dev ruff check .
+uv run --group dev ruff format --check .
+```
 
 ## API Docs
 

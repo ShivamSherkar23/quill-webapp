@@ -1,0 +1,40 @@
+version: "3"
+
+tasks:
+  install:
+    desc: Install app and dev dependencies
+    cmds:
+    - uv sync --group dev
+
+  run:
+    desc: Run the app locally with auto-reload
+    cmds:
+    - uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  lint:
+    desc: Run lint and format checks
+    cmds:
+    - uv run --group dev ruff check .
+    - uv run --group dev ruff format --check .
+
+  format:
+    desc: Auto-fix lint issues and format the codebase
+    cmds:
+    - uv run --group dev ruff check --fix .
+    - uv run --group dev ruff format .
+
+  test:
+    desc: Run the test suite
+    cmds:
+    - uv run --group dev pytest
+
+  coverage:
+    desc: Run tests with coverage output
+    cmds:
+    - uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing
+
+  check:
+    desc: Run lint and tests
+    deps:
+    - lint
+    - test
