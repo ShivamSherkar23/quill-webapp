@@ -4,10 +4,11 @@ on:
   pull_request:
   push:
     branches:
-      - "**"
+    - "**"
     tags:
-      - "v*.*.*"
+    - "v*.*.*"
   workflow_dispatch:
+
 
 permissions:
   contents: read
@@ -15,6 +16,7 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
+  DOCKER_PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
   lint:
@@ -22,127 +24,165 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --locked --group dev
+    - name: Install dependencies
+      run: uv sync --locked --group dev
 
-      - name: Run Ruff checks
-        run: |
-          uv run --group dev ruff check .
-          uv run --group dev ruff format --check .
+    - name: Run Ruff checks
+      run: |
+        uv run --group dev ruff check .
+        uv run --group dev ruff format --check .
 
   test:
     name: Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --locked --group dev
+    - name: Install dependencies
+      run: uv sync --locked --group dev
 
-      - name: Run tests
-        run: uv run --group dev pytest
+    - name: Run tests
+      run: uv run --group dev pytest
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --locked --group dev
+    - name: Install dependencies
+      run: uv sync --locked --group dev
 
-      - name: Run coverage
-        run: uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing --cov-report=xml
+    - name: Run coverage
+      run: uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing --cov-report=xml
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
 
-  docker:
-    name: Docker Image
+  docker-build:
+    name: Docker Build
     runs-on: ubuntu-latest
     needs:
-      - lint
-      - test
-      - coverage
+    - lint
+    - test
+    - coverage
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-      - name: Prepare Docker metadata inputs
-        id: docker-vars
-        run: |
-          APP_VERSION="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
-          echo "image_name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
-          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub Container Registry
-        if: github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/v'))
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        target: runtime
+        platforms: ${{ env.DOCKER_PLATFORMS }}
+        push: false
+        tags: quill-webapp:ci
+        provenance: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.docker-vars.outputs.image_name }}
-          tags: |
-            type=raw,value=${{ steps.docker-vars.outputs.app_version }}-dev.${{ github.run_number }}
-            type=sha,prefix=sha-
+  ghcr-publish:
+    name: GHCR Publish
+    runs-on: ubuntu-latest
+    needs:
+    - docker-build
+    if: github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/v'))
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: runtime
-          push: ${{ github.event_name == 'push' && (github.ref_name == github.event.repository.default_branch || startsWith(github.ref, 'refs/tags/v')) }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Prepare Docker metadata inputs
+      id: docker-vars
+      run: |
+        APP_VERSION="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+        echo "image_name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+        echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ steps.docker-vars.outputs.image_name }}
+        tags: |
+          type=raw,value=${{ steps.docker-vars.outputs.app_version }}-dev.${{ github.run_number }}
+          type=sha,prefix=sha-
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        target: runtime
+        platforms: ${{ env.DOCKER_PLATFORMS }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        provenance: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
