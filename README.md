@@ -36,14 +36,41 @@ uv sync --group dev
 # Create the PostgreSQL database
 createdb quill
 
-# Run the app (uses postgresql://postgres:postgres@localhost:5432/quill by default)
+# Set required runtime secrets and database settings
+export SECRET_KEY="$(openssl rand -hex 32)"
+export POSTGRES_DB="quill"
+export POSTGRES_USER="your-db-user"
+export POSTGRES_PASSWORD="your-db-password"
+export POSTGRES_HOST="localhost"
+export POSTGRES_PORT="5432"
+
+# Run the app
 uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 # Or set a custom database URL
-DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/dbname" uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+SECRET_KEY="$(openssl rand -hex 32)" DATABASE_URL="postgresql+asyncpg://user:pass@host:5432/dbname" uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Open http://localhost:8000 in your browser.
+
+## Configuration
+
+No secrets or database credentials are baked into the application image. At runtime, set either `DATABASE_URL` or all of `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. Optional database settings are `POSTGRES_HOST` (defaults to `localhost`), `POSTGRES_PORT` (defaults to `5432`), and `POSTGRES_DRIVER` (defaults to `postgresql+asyncpg`).
+
+`SECRET_KEY` is required and should be a long random value. For Docker/Kubernetes secrets, `SECRET_KEY_FILE`, `DATABASE_URL_FILE`, and `POSTGRES_PASSWORD_FILE` are also supported.
+
+For local Docker Compose usage, create a private `.env` file from `.env.example` and replace every placeholder:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Build the production image without secrets:
+
+```bash
+docker build --target runtime -t quill-webapp:prod .
+```
 
 ## Tests
 

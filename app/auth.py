@@ -1,9 +1,9 @@
-import os
-
 import bcrypt
 from itsdangerous import URLSafeTimedSerializer
 
-SECRET_KEY = os.environ["SECRET_KEY"]
+from app.config import get_secret_key
+
+SECRET_KEY = get_secret_key()
 
 serializer = URLSafeTimedSerializer(SECRET_KEY)
 
