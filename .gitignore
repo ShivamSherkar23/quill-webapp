@@ -37,4 +37,6 @@ pip-wheel-metadata/
 .ruff_cache/
 .coverage
 .coverage.*
+coverage.xml
+.uv-cache/
 .cache
