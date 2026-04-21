@@ -4,7 +4,7 @@ tasks:
   install:
     desc: Install app and dev dependencies
     cmds:
-    - uv sync --group dev
+    - uv sync --locked --group dev
 
   run:
     desc: Run the app locally with auto-reload
@@ -31,7 +31,7 @@ tasks:
   coverage:
     desc: Run tests with coverage output
     cmds:
-    - uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing
+    - uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing --cov-report=xml
 
   check:
     desc: Run lint and tests

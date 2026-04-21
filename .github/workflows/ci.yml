@@ -42,14 +42,16 @@ jobs:
       with:
         enable-cache: true
 
+    - &setup-task
+      name: Set up Task
+      uses: go-task/setup-task@v2
+
     - &install-deps
       name: Install dependencies
-      run: uv sync --locked --group dev
+      run: task install
 
     - name: Run Ruff checks
-      run: |
-        uv run --group dev ruff check .
-        uv run --group dev ruff format --check .
+      run: task lint
 
   test:
     name: Test
@@ -61,10 +63,11 @@ jobs:
     - *checkout
     - *setup-python
     - *setup-uv
+    - *setup-task
     - *install-deps
 
     - name: Run tests
-      run: uv run --group dev pytest
+      run: task test
 
   coverage:
     name: Coverage
@@ -76,10 +79,11 @@ jobs:
     - *checkout
     - *setup-python
     - *setup-uv
+    - *setup-task
     - *install-deps
 
     - name: Run coverage
-      run: uv run --group dev pytest --cov=app --cov=main --cov-report=term-missing --cov-report=xml
+      run: task coverage
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v7
